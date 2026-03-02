@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.2] - 2026-03-02
+
+### Fixed
+- **parameter-naming-validator.ts** — False positive for `x`/`y` parameters in drawing functions
+  (`label.new()`, `line.new()`, `box.new()`) and `n` in math/array functions: stale compiled
+  `.js` artifact in `src/parser/` was being loaded by Vitest instead of the updated `.ts` source,
+  causing the `singleWord` Set additions from v3.4.1 to be silently ignored at runtime.
+  Deleted all stale compiled `.js` files from `src/parser/`.
+- **parameter-naming-validator.ts** — Narrowed `VALID_SINGLE_CHAR_PARAMS` from
+  `['x','y','a','b','c','n','i','j','k']` to `['x','y','n']`. Characters `a`, `b`, `c`, `i`,
+  `j`, `k` are **not** Pine Script built-in function parameter names and should be flagged as
+  single-character naming violations. The remaining entries (`x`, `y`, `n`) serve as
+  defense-in-depth alongside the `singleWord` Set (which catches them first in the pipeline).
+
+### Added
+- **parameter-naming-validation.test.js** — 4 new test cases for drawing object parameter
+  validation: `label.new(x, y)`, `line.new(x1, y1, x2, y2)`, `box.new(x1, y1, x2, y2)`,
+  and `array.new<float>(n)`.
+
 ## [3.4.1] - 2026-03-02
 
 ### Added

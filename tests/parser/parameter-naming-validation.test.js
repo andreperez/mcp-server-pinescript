@@ -273,6 +273,50 @@ describe("PARAMETER_NAMING_CONVENTION_VALIDATION - Comprehensive Suite", () => {
       expect(result.violations[0].suggestedParameterName).toBe("text_color");
       expect(result.violations[0].namingConvention.detected).toBe("ALL_CAPS");
     });
+
+    // Regression: canonical single-char coordinate params must never be flagged.
+    // label.new / line.new / box.new use x, y, x1, y1, x2, y2 as official named params —
+    // see https://www.tradingview.com/pine-script-reference/v6/#fun_label.new
+    it("should accept x and y as named params in label.new", async () => {
+      const source =
+        '//@version=6\nindicator("Test")\nlabel.new(x = bar_index + 30, y = close, text = "Hi", style = label.style_label_up, size = size.small)';
+      const result = await quickValidateParameterNaming(source);
+
+      // DEBUG: print actual violations so we can see what's being flagged
+      if (!result.isValid) {
+        console.log("DEBUG violations:", JSON.stringify(result.violations, null, 2));
+      }
+
+      expect(result.isValid).toBe(true);
+      expect(result.violations).toHaveLength(0);
+    });
+
+    it("should accept x1, y1, x2, y2 as named params in line.new", async () => {
+      const source =
+        '//@version=6\nindicator("Test")\nline.new(x1 = bar_index[5], y1 = high, x2 = bar_index, y2 = high, color = color.red, width = 2, extend = extend.both)';
+      const result = await quickValidateParameterNaming(source);
+
+      expect(result.isValid).toBe(true);
+      expect(result.violations).toHaveLength(0);
+    });
+
+    it("should accept x1, y1, x2, y2 as named params in box.new", async () => {
+      const source =
+        '//@version=6\nindicator("Test")\nbox.new(x1 = bar_index[5], y1 = high, x2 = bar_index, y2 = low, border_color = color.blue, border_width = 1)';
+      const result = await quickValidateParameterNaming(source);
+
+      expect(result.isValid).toBe(true);
+      expect(result.violations).toHaveLength(0);
+    });
+
+    it("should accept n as a named param in array.new and similar functions", async () => {
+      const source =
+        '//@version=6\nindicator("Test")\nmyArr = array.new<float>(n = 10, initial_value = 0.0)';
+      const result = await quickValidateParameterNaming(source);
+
+      expect(result.isValid).toBe(true);
+      expect(result.violations).toHaveLength(0);
+    });
   });
 
   describe("Complex Nested Scenarios", () => {

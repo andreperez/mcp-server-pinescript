@@ -620,8 +620,10 @@ export class ParameterNamingValidator {
      */
     detectNamingConventionViolation(paramName) {
         // Single-char params: Pine Script built-in functions legitimately use single-character parameter
-        // names such as x, y for drawing functions (label.new, line.new, box.new) and loop variables.
-        const VALID_SINGLE_CHAR_PARAMS = new Set(['x', 'y', 'a', 'b', 'c', 'n', 'i', 'j', 'k']);
+        // names such as x, y for drawing functions (label.new, line.new, box.new) and n for math/array.
+        // Note: these are also in the singleWord Set (checked earlier in the pipeline via isKnownValidParameter),
+        // so this acts as defense-in-depth for the detectNamingConventionViolation method.
+        const VALID_SINGLE_CHAR_PARAMS = new Set(['x', 'y', 'n']);
         if (paramName.length === 1) {
             if (VALID_SINGLE_CHAR_PARAMS.has(paramName)) {
                 return null; // known valid single-character parameter name in Pine Script built-ins
