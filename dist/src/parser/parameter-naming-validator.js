@@ -80,6 +80,48 @@ export class ParameterNamingValidator {
                 'columns',
                 'rows',
                 'position',
+                // Drawing-function coordinate parameters (label.new, line.new, box.new)
+                'x',
+                'y',
+                'x1',
+                'y1',
+                'x2',
+                'y2',
+                // Loop/math shorthand parameters
+                'n',
+                // Sep 2025: plot() new linestyle parameter
+                'linestyle',
+                // Oct 2025: time()/time_close() new parameter
+                'timeframe',
+                // v6: request.*() parameter
+                'gaps',
+                'lookahead',
+                'currency',
+                'dividends',
+                'splits',
+                'earnings',
+                'ignore_dividends_adjustments',
+                // Oct 2019: plotcandle() parameters
+                'bordercolor',
+                'wickcolor',
+                // Mar 2021: fill() parameter
+                'fillgaps',
+                // Jul 2021: time()/time_close() timezone parameter
+                'timezone',
+                // line.new() parameter (all versions)
+                'extend',
+                // label.new() / box.new() text content (not text_color/etc)
+                'text',
+                // label.new() horizontal alignment (≠ text_halign for table/box)
+                'textalign',
+                // Jun 2022: ta.vwap()
+                'anchor',
+                // Jun 2022: strategy.close() / strategy.close_all()
+                'immediately',
+                // Aug 2022: ta.pivot_point_levels()
+                'developing',
+                // Aug 2024: ticker.new() / ticker.modify()
+                'backadjustment',
             ]),
             // Common snake_case parameters (correct)
             snakeCase: new Set([
@@ -104,6 +146,53 @@ export class ParameterNamingValidator {
                 'max_lines_count',
                 'max_labels_count',
                 'max_boxes_count',
+                // May 2024: indicator()/strategy() new parameter
+                'calc_bars_count',
+                // Oct 2024: indicator()/strategy() new parameter
+                'behind_chart',
+                // Aug 2024: futures settlement
+                'settlement_as_close',
+                // Oct 2025: time()/time_close() new parameter
+                'timeframe_bars_back',
+                // Misc valid snake_case params flagged as violations
+                'disable_alert',
+                'ignore_invalid_symbol',
+                'ignore_invalid_timeframe',
+                'qty_percent',
+                'bars_back',
+                'pyramiding',
+                'use_bar_magnifier',
+                'close_entries_rule',
+                'margin_long',
+                'margin_short',
+                'slippage',
+                'commission_value',
+                'commission_type',
+                'default_qty_type',
+                'default_qty_value',
+                'initial_capital',
+                'risk_free_rate',
+                'process_orders_on_close',
+                'backtest_fill_limits_assumption',
+                // Jun 2022: ta.vwap() standard-deviation multiplier
+                'stdev_mult',
+                // Jun 2022: strategy.exit() profit/loss/trailing comment & alert params
+                'comment_profit',
+                'comment_loss',
+                'comment_trailing',
+                'alert_profit',
+                'alert_loss',
+                'alert_trailing',
+                // strategy.exit() trailing stop params
+                'trail_price',
+                'trail_points',
+                'trail_offset',
+                // Jul 2021: indicator() / strategy() plot z-order
+                // (NOTE: resolution_gaps is NOT added — it belongs to study() which is
+                //  removed in v6; indicator() does not carry that parameter)
+                'explicit_plot_zorder',
+                // Sep 2023: strategy.default_entry_qty()
+                'fill_price',
             ]),
             // Hidden/optional parameters (not in formal signatures but valid)
             hiddenParams: new Set(['minval', 'maxval', 'step', 'options']),
@@ -530,8 +619,13 @@ export class ParameterNamingValidator {
      * @returns Naming issue details or null
      */
     detectNamingConventionViolation(paramName) {
-        // Single character parameters are usually invalid (except 'a', 'x', 'y' etc which should be in singleWord list)
+        // Single-char params: Pine Script built-in functions legitimately use single-character parameter
+        // names such as x, y for drawing functions (label.new, line.new, box.new) and loop variables.
+        const VALID_SINGLE_CHAR_PARAMS = new Set(['x', 'y', 'a', 'b', 'c', 'n', 'i', 'j', 'k']);
         if (paramName.length === 1) {
+            if (VALID_SINGLE_CHAR_PARAMS.has(paramName)) {
+                return null; // known valid single-character parameter name in Pine Script built-ins
+            }
             return {
                 detected: 'single character',
                 expected: 'descriptive parameter name',

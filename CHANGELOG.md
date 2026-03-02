@@ -5,7 +5,57 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [3.3.22] - 2025-09-16
+## [3.4.1] - 2026-03-02
+
+### Added
+- **parameter-naming-validator.ts** — Added missing Pine Script v6 `singleWord` parameters present
+  in the language before the original repository was published (Aug 2025) but absent from the Sets:
+  `bordercolor`, `wickcolor` (`plotcandle()`; since Oct 2019), `fillgaps` (`fill()`; since Mar 2021),
+  `timezone` (`time()` / `time_close()`; since Jul 2021), `extend` (`line.new()`), `text`
+  (`label.new()` / `box.new()` content), `textalign` (`label.new()` horizontal alignment — distinct
+  from `text_halign` which is for tables/boxes), `anchor` (`ta.vwap()`; since Jun 2022),
+  `immediately` (`strategy.close()` / `strategy.close_all()`; since Jun 2022), `developing`
+  (`ta.pivot_point_levels()`; since Aug 2022), `backadjustment` (`ticker.new()` /
+  `ticker.modify()`; since Aug 2024).
+- **parameter-naming-validator.ts** — Added missing Pine Script v6 `snakeCase` parameters:
+  `stdev_mult` (`ta.vwap()`; since Jun 2022), `comment_profit`, `comment_loss`,
+  `comment_trailing`, `alert_profit`, `alert_loss`, `alert_trailing` (`strategy.exit()`; since
+  Jun 2022), `trail_price`, `trail_points`, `trail_offset` (`strategy.exit()`),
+  `explicit_plot_zorder` (`indicator()` / `strategy()`; since Jul 2021),
+  `fill_price` (`strategy.default_entry_qty()`; since Sep 2023).
+
+### Notes
+- `resolution_gaps` was **intentionally excluded**: it was a parameter of `study()`, which was
+  removed in Pine Script v5 (replaced by `indicator()`). The parameter does not exist in any
+  Pine Script v6 function.
+
+## [3.4.0] - 2026-03-02
+
+### Fixed
+- **validator.js** — `INVALID_LINE_CONTINUATION` false positive on switch arm lines: the `>` in
+  the `=>` operator incorrectly matched the comparison operator regex pattern. Lines containing `=>`
+  are now skipped before operator checks.
+- **validator.js** — `INVALID_LINE_CONTINUATION` false positive for multi-line expressions inside
+  parentheses. Pine Script v6 (December 2025 release) explicitly allows any indentation for wrapped
+  lines enclosed in parentheses. Added parenthesis-depth tracking across lines; operator checks are
+  skipped when `entryParenDepth > 0`.
+- **parameter-naming-validator.ts** — `parameter_validation` false positive for single-character
+  parameter names `x`, `y`, `a`, `b`, `c`, `n`, `i`, `j`, `k`. These are legitimately used in
+  Pine Script built-in drawing and math functions. Added `VALID_SINGLE_CHAR_PARAMS` allowlist.
+- **index.ts** — `naming_convention` false positive for `UPPER_SNAKE_CASE` identifiers (e.g.,
+  constant names like `GRP_SR1`, color constants). Pine Script convention allows `UPPER_SNAKE_CASE`
+  for constants. Updated `checkNamingConvention()` to also allow `snake_case` variable names.
+- **index.ts** — `plot_title` false positive when `title =` is written with a space before `=`.
+  Updated `checkPlotTitle()` regex to `\btitle\s*=` to match both forms.
+
+### Added
+- **parameter-naming-validator.ts** — Added missing Pine Script v6 parameters to `singleWord` Set:
+  `x`, `y`, `x1`, `y1`, `x2`, `y2`, `n`, `linestyle` (Sep 2025), `timeframe`, `gaps`,
+  `lookahead`, `currency`, `dividends`, `splits`, `earnings`, `ignore_dividends_adjustments`.
+- **parameter-naming-validator.ts** — Added missing Pine Script v6 parameters to `snakeCase` Set:
+  `calc_bars_count` (May 2024), `behind_chart` (Oct 2024), `settlement_as_close` (Aug 2024),
+  `timeframe_bars_back` (Oct 2025), `disable_alert`, `ignore_invalid_symbol`,
+  `ignore_invalid_timeframe`, `qty_percent`, `bars_back`, and common `strategy.*` parameters.
 
 ### Fixed
 - Automated patch version bump with validation enhancements

@@ -924,7 +924,9 @@ function checkNamingConvention(line, lineNumber, originalLine) {
                 (beforeAssignment.includes('(') && !beforeAssignment.includes(')') && afterAssignment.includes('='))) {
                 return null;
             }
-            if (!/^[a-z][a-zA-Z0-9]*$/.test(varName) &&
+            if (!/^[a-z][a-zA-Z0-9]*$/.test(varName) && // not camelCase
+                !/^[a-z][a-z0-9_]*$/.test(varName) && // not snake_case (valid in Pine Script)
+                !/^[A-Z][A-Z0-9_]*$/.test(varName) && // not UPPER_SNAKE_CASE constant
                 !['ta', 'math', 'array', 'str'].includes(varName)) {
                 return {
                     line: lineNumber,
@@ -955,7 +957,8 @@ function checkOperatorSpacing(line, lineNumber) {
     return null;
 }
 function checkPlotTitle(line, lineNumber) {
-    if (line.includes('plot(') && !line.includes('title=')) {
+    // Use regex to handle title= and title = (with optional spaces around the equals sign)
+    if (line.includes('plot(') && !/\btitle\s*=/.test(line)) {
         return {
             line: lineNumber,
             column: line.indexOf('plot(') + 1,
