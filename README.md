@@ -9,7 +9,7 @@ AI-optimized Model Context Protocol (MCP) server for PineScript v6 development, 
 **Installation & Verification**:
 ```bash
 # 1. Install and connect
-npm install git+git@github.com:iamrichardD/mcp-server-pinescript.git
+npm install git@github.com:andreperez/mcp-server-pinescript.git
 claude mcp add pinescript-docs node ./node_modules/mcp-server-pinescript/index.js
 
 # 2. Verify connection
