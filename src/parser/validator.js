@@ -30,7 +30,7 @@ let loadedRulesTimestamp = null;
 export function loadValidationRules(rules) {
 	validationRules = rules;
 	loadedRulesTimestamp = Date.now();
-	console.log(`Loaded ${Object.keys(rules).length} validation rules`);
+	console.error(`Loaded ${Object.keys(rules).length} validation rules`);
 }
 /**
  * Get current validation rules (for debugging/testing)

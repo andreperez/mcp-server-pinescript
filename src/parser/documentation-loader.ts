@@ -117,7 +117,7 @@ export class PineScriptDocumentationLoader {
       const loadTime = Date.now() - startTime;
       this.loaded = true;
 
-      console.log(
+      console.error(
         `[PineScriptDocumentationLoader] Successfully loaded ${this.registry.size} functions ` +
           `with ${totalParameters} parameters in ${loadTime}ms`
       );
@@ -214,7 +214,7 @@ export const documentationLoader = new PineScriptDocumentationLoader();
  * @returns Promise that resolves when all documentation is loaded into memory
  */
 export async function initializeDocumentationLoader(): Promise<void> {
-  console.log('[PineScriptDocumentationLoader] Initializing documentation at service startup...');
+  console.error('[PineScriptDocumentationLoader] Initializing documentation at service startup...');
   await documentationLoader.loadDocumentation();
-  console.log('[PineScriptDocumentationLoader] Documentation initialization complete.');
+  console.error('[PineScriptDocumentationLoader] Documentation initialization complete.');
 }

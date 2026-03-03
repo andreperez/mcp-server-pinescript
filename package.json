@@ -74,8 +74,7 @@
 	"dependencies": {
 		"@mendable/firecrawl-js": "^4.3.4",
 		"@modelcontextprotocol/sdk": "^1.17.5",
-		"jsdom": "^26.1.0",
-		"mcp-server-pinescript": "github:andreperez/mcp-server-pinescript"
+		"jsdom": "^26.1.0"
 	},
 	"engines": {
 		"node": ">=18"

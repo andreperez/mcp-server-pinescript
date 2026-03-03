@@ -1,0 +1,3 @@
+[PineScriptDocumentationLoader] Initializing documentation at service startup...
+[PineScriptDocumentationLoader] Successfully loaded 457 functions with 1184 parameters in 13ms
+[PineScriptDocumentationLoader] Documentation initialization complete.

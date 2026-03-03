@@ -8,9 +8,10 @@ AI-optimized Model Context Protocol (MCP) server for PineScript v6 development, 
 
 **Installation & Verification**:
 ```bash
-# 1. Install and connect
-npm install git@github.com:andreperez/mcp-server-pinescript.git
-claude mcp add pinescript-docs node ./node_modules/mcp-server-pinescript/index.js
+# 1. Clone, install dependencies, and connect
+git clone https://github.com/andreperez/mcp-server-pinescript.git
+cd mcp-server-pinescript && npm install
+claude mcp add pinescript-docs node ./index.js
 
 # 2. Verify connection
 claude mcp list  # Should show "pinescript-docs: Connected ✓"
@@ -82,7 +83,7 @@ time claude -p "Use pinescript_reference to search 'ta.sma'"
 
 **Local Development Mode**:
 ```bash
-git clone https://github.com/iamrichardD/mcp-server-pinescript.git
+git clone https://github.com/andreperez/mcp-server-pinescript.git
 cd mcp-server-pinescript && npm install && npm start
 # Should show: "PineScript MCP Server ready with preloaded documentation!"
 ```
