@@ -138,6 +138,8 @@ export class ParameterNamingValidator {
                 'border_color',
                 'border_width',
                 'border_style',
+                'frame_color',
+                'frame_width',
                 'oca_name',
                 'alert_message',
                 'show_last',
@@ -365,7 +367,7 @@ export class ParameterNamingValidator {
             while (i < endIndex && /\s/.test(source.charAt(i))) {
                 i++;
             }
-            if (i < endIndex && source.charAt(i) === '=') {
+            if (i < endIndex && source.charAt(i) === '=' && source.charAt(i + 1) !== '=') {
                 // Named parameter found
                 const paramName = source.slice(paramStart, i).trim();
                 i++; // skip =

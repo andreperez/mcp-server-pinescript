@@ -1462,7 +1462,7 @@ class DeclarationProcessor {
   }
 
   private isDeclarationLine(trimmedLine: string): boolean {
-    return trimmedLine.includes('indicator(') || trimmedLine.includes('strategy(');
+    return trimmedLine.includes('indicator(') || trimmedLine.includes('strategy(') || trimmedLine.includes('library(');
   }
 
   private async runAllAstValidations(
@@ -1559,6 +1559,7 @@ function checkNamingConvention(
         varName === 'text_halign' || varName === 'text_valign' || varName === 'text_wrap' ||
         varName === 'text_font_family' || varName === 'text_formatting' ||
         varName === 'border_color' || varName === 'border_width' || varName === 'border_style' ||
+        varName === 'frame_color' || varName === 'frame_width' ||
         varName === 'oca_name' || varName === 'alert_message' || varName === 'show_last' ||
         varName === 'force_overlay' || varName === 'max_bars_back' ||
         varName === 'max_lines_count' || varName === 'max_labels_count' || varName === 'max_boxes_count'
@@ -1616,10 +1617,12 @@ function checkNamingConvention(
 }
 
 function checkOperatorSpacing(line: string, lineNumber: number): ValidationViolation | null {
-  if (/\w[+\-*/=]\w/.test(line)) {
+  // Strip string literals to avoid false positives on operators in format strings (e.g., "ms/bar")
+  const stripped = line.replace(/"[^"]*"|'[^']*'/g, '""');
+  if (/\w[+\-*/=]\w/.test(stripped)) {
     return {
       line: lineNumber,
-      column: line.search(/\w[+\-*/=]\w/) + 1,
+      column: stripped.search(/\w[+\-*/=]\w/) + 1,
       rule: 'operator_spacing',
       severity: 'suggestion',
       message: 'Missing spaces around operators',
@@ -1632,7 +1635,8 @@ function checkOperatorSpacing(line: string, lineNumber: number): ValidationViola
 
 function checkPlotTitle(line: string, lineNumber: number): ValidationViolation | null {
   // Use regex to handle title= and title = (with optional spaces around the equals sign)
-  if (line.includes('plot(') && !/\btitle\s*=/.test(line)) {
+  // Also detect positional title: plot(series, "title", ...) — string as 2nd argument
+  if (line.includes('plot(') && !/\btitle\s*=/.test(line) && !/\bplot\s*\([^,]+,\s*"/.test(line)) {
     return {
       line: lineNumber,
       column: line.indexOf('plot(') + 1,
@@ -1691,9 +1695,9 @@ function createDeclarationViolation(): ValidationViolation {
     column: 1,
     rule: 'script_declaration',
     severity: 'error',
-    message: 'Script must include either indicator() or strategy() declaration',
+    message: 'Script must include either indicator(), strategy(), or library() declaration',
     category: 'language',
-    suggested_fix: 'Add indicator("My Script") or strategy("My Strategy")',
+    suggested_fix: 'Add indicator("My Script"), strategy("My Strategy"), or library("My Library", overlay = true)',
   };
 }
 

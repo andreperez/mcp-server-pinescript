@@ -1403,10 +1403,10 @@ export async function quickValidateLineContinuation(source) {
 
 	const lines = source.split('\n');
 	const operatorPatterns = {
-		arithmetic: /[\+\-\*\/]\s*(?:\/\/.*)?$/,
+		// arithmetic operators (+, -, *, /) removed: line continuation after them IS valid in Pine Script v6
 		logical: /(?:and|or)\s*(?:\/\/.*)?$/,
-		comparison: /[<>]=?|==|!=\s*(?:\/\/.*)?$/,
-		ternary: /\?\s*(?:\/\/.*)?$|:\s*(?:\/\/.*)?$/
+		comparison: /(?:[<>]=?|==|!=)\s*(?:\/\/.*)?$/,
+		ternary: /\?\s*(?:\/\/.*)?$/
 	};
 
 	// Track parenthesis depth across lines.

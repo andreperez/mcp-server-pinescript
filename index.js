@@ -823,7 +823,7 @@ class DeclarationProcessor {
 		return { skipToLine: endLine };
 	}
 	isDeclarationLine(trimmedLine) {
-		return trimmedLine.includes('indicator(') || trimmedLine.includes('strategy(');
+		return trimmedLine.includes('indicator(') || trimmedLine.includes('strategy(') || trimmedLine.includes('library(');
 	}
 	async runAllAstValidations(completeFunctionText, lineNumber) {
 		for (const validatorName of this.astValidators) {
@@ -898,6 +898,7 @@ function checkNamingConvention(line, lineNumber, originalLine) {
 				varName === 'text_halign' || varName === 'text_valign' || varName === 'text_wrap' ||
 				varName === 'text_font_family' || varName === 'text_formatting' ||
 				varName === 'border_color' || varName === 'border_width' || varName === 'border_style' ||
+				varName === 'frame_color' || varName === 'frame_width' ||
 				varName === 'oca_name' || varName === 'alert_message' || varName === 'show_last' ||
 				varName === 'force_overlay' || varName === 'max_bars_back' ||
 				varName === 'max_lines_count' || varName === 'max_labels_count' || varName === 'max_boxes_count');
@@ -925,6 +926,7 @@ function checkNamingConvention(line, lineNumber, originalLine) {
 				return null;
 			}
 			if (!/^[a-z][a-zA-Z0-9]*$/.test(varName) &&
+				!/^[A-Z][A-Z0-9_]*$/.test(varName) &&
 				!['ta', 'math', 'array', 'str'].includes(varName)) {
 				return {
 					line: lineNumber,
@@ -941,10 +943,11 @@ function checkNamingConvention(line, lineNumber, originalLine) {
 	return null;
 }
 function checkOperatorSpacing(line, lineNumber) {
-	if (/\w[+\-*/=]\w/.test(line)) {
+	const stripped = line.replace(/"[^"]*"|'[^']*'/g, '""');
+	if (/\w[+\-*/=]\w/.test(stripped)) {
 		return {
 			line: lineNumber,
-			column: line.search(/\w[+\-*/=]\w/) + 1,
+			column: stripped.search(/\w[+\-*/=]\w/) + 1,
 			rule: 'operator_spacing',
 			severity: 'suggestion',
 			message: 'Missing spaces around operators',
@@ -955,7 +958,7 @@ function checkOperatorSpacing(line, lineNumber) {
 	return null;
 }
 function checkPlotTitle(line, lineNumber) {
-	if (line.includes('plot(') && !line.includes('title=')) {
+	if (line.includes('plot(') && !/\btitle\s*=/.test(line) && !/\bplot\s*\([^,]+,\s*"/.test(line)) {
 		return {
 			line: lineNumber,
 			column: line.indexOf('plot(') + 1,
@@ -1010,9 +1013,9 @@ function createDeclarationViolation() {
 		column: 1,
 		rule: 'script_declaration',
 		severity: 'error',
-		message: 'Script must include either indicator() or strategy() declaration',
+		message: 'Script must include either indicator(), strategy(), or library() declaration',
 		category: 'language',
-		suggested_fix: 'Add indicator("My Script") or strategy("My Strategy")',
+		suggested_fix: 'Add indicator("My Script"), strategy("My Strategy"), or library("My Library", overlay = true)',
 	};
 }
 // Extract final result processing
