@@ -943,11 +943,19 @@ function checkNamingConvention(line, lineNumber, originalLine) {
 	return null;
 }
 function checkOperatorSpacing(line, lineNumber) {
-	const stripped = line.replace(/"[^"]*"|'[^']*'/g, '""');
-	if (/\w[+\-*/=]\w/.test(stripped)) {
+	// Skip import statements — path separators (/) are not division operators
+	if (/^\s*import\s/.test(line)) return null;
+	let stripped = line.replace(/"[^"]*"|'[^']*'/g, '""');
+	// Strip comments to avoid false positives on URLs or expressions in comments
+	stripped = stripped.replace(/\/\/.*$/, '');
+	// Skip scientific notation (e.g., 10e-1, 1e+3)
+	stripped = stripped.replace(/\d+e[+-]\d+/gi, '0');
+	// Skip named parameters (e.g., minval=150, overlay=true)
+	stripped = stripped.replace(/\w+=(?=[\w"'.])/g, 'X=');
+	if (/\w[+\-*/]\w/.test(stripped)) {
 		return {
 			line: lineNumber,
-			column: stripped.search(/\w[+\-*/=]\w/) + 1,
+			column: stripped.search(/\w[+\-*/]\w/) + 1,
 			rule: 'operator_spacing',
 			severity: 'suggestion',
 			message: 'Missing spaces around operators',
@@ -958,7 +966,7 @@ function checkOperatorSpacing(line, lineNumber) {
 	return null;
 }
 function checkPlotTitle(line, lineNumber) {
-	if (line.includes('plot(') && !/\btitle\s*=/.test(line) && !/\bplot\s*\([^,]+,\s*"/.test(line)) {
+	if (line.includes('plot(') && !/\btitle\s*=/.test(line) && !/\bplot\s*\((?:[^,()]|\([^)]*\))*,\s*["']/.test(line)) {
 		return {
 			line: lineNumber,
 			column: line.indexOf('plot(') + 1,

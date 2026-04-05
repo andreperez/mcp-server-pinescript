@@ -1617,12 +1617,20 @@ function checkNamingConvention(
 }
 
 function checkOperatorSpacing(line: string, lineNumber: number): ValidationViolation | null {
+  // Skip import statements — path separators (/) are not division operators
+  if (/^\s*import\s/.test(line)) return null;
   // Strip string literals to avoid false positives on operators in format strings (e.g., "ms/bar")
-  const stripped = line.replace(/"[^"]*"|'[^']*'/g, '""');
-  if (/\w[+\-*/=]\w/.test(stripped)) {
+  let stripped = line.replace(/"[^"]*"|'[^']*'/g, '""');
+  // Strip comments to avoid false positives on URLs or expressions in comments
+  stripped = stripped.replace(/\/\/.*$/, '');
+  // Skip scientific notation (e.g., 10e-1, 1e+3)
+  stripped = stripped.replace(/\d+e[+-]\d+/gi, '0');
+  // Skip named parameters (e.g., minval=150, overlay=true)
+  stripped = stripped.replace(/\w+=(?=[\w"'.])/g, 'X=');
+  if (/\w[+\-*/]\w/.test(stripped)) {
     return {
       line: lineNumber,
-      column: stripped.search(/\w[+\-*/=]\w/) + 1,
+      column: stripped.search(/\w[+\-*/]\w/) + 1,
       rule: 'operator_spacing',
       severity: 'suggestion',
       message: 'Missing spaces around operators',
@@ -1636,7 +1644,7 @@ function checkOperatorSpacing(line: string, lineNumber: number): ValidationViola
 function checkPlotTitle(line: string, lineNumber: number): ValidationViolation | null {
   // Use regex to handle title= and title = (with optional spaces around the equals sign)
   // Also detect positional title: plot(series, "title", ...) — string as 2nd argument
-  if (line.includes('plot(') && !/\btitle\s*=/.test(line) && !/\bplot\s*\([^,]+,\s*"/.test(line)) {
+  if (line.includes('plot(') && !/\btitle\s*=/.test(line) && !/\bplot\s*\((?:[^,()]|\([^)]*\))*,\s*["']/.test(line)) {
     return {
       line: lineNumber,
       column: line.indexOf('plot(') + 1,
