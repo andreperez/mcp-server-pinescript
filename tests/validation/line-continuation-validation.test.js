@@ -15,8 +15,9 @@ describe("Line Continuation Validation", () => {
   });
 
   describe("INVALID_LINE_CONTINUATION Detection", () => {
-    it("should detect arithmetic operator line continuation error", async () => {
-      const problematicCode = `
+    it("should NOT flag arithmetic operator line continuation (valid in Pine Script v6)", async () => {
+      // Arithmetic operators (+, -, *, /) at end of line are valid continuation in Pine Script v6
+      const validCode = `
 //@version=6
 indicator("Test")
 institutionalFlow = (isOrderBlockBullish ? 1.0 : isOrderBlockBearish ? -1.0 : 0.0) +
@@ -24,17 +25,13 @@ institutionalFlow = (isOrderBlockBullish ? 1.0 : isOrderBlockBearish ? -1.0 : 0.
 plot(institutionalFlow)
       `.trim();
 
-      const result = await parser.validateCode(problematicCode);
+      const result = await parser.validateCode(validCode);
 
-      expect(result.violations).toContainEqual(
-        expect.objectContaining({
-          errorCode: "INVALID_LINE_CONTINUATION",
-          severity: "error",
-          category: "syntax_validation",
-          line: expect.any(Number),
-          message: expect.stringContaining("Pine Script v6 prohibits line continuation after arithmetic operator"),
-        })
+      const arithmeticErrors = result.violations.filter(
+        (v) => v.errorCode === "INVALID_LINE_CONTINUATION" &&
+               v.message && v.message.includes("arithmetic")
       );
+      expect(arithmeticErrors).toHaveLength(0);
     });
 
     it("should detect logical operator line continuation error", async () => {
@@ -289,6 +286,83 @@ plot(ema21)
       );
       expect(lineContErrors).toHaveLength(0);
     });
+
+    it("should NOT flag variables containing 'or' substring (word boundary prevention)", async () => {
+      // Words like 'color', '_vector', 'Factor' contain 'or' but are NOT logical operators
+      const validCode = `
+//@version=6
+indicator("Test")
+baseColor = close > open ?
+    color.green : color.red
+plot(close, color=baseColor)
+      `.trim();
+
+      const result = await parser.validateCode(validCode);
+
+      const logicalErrors = result.violations.filter(
+        (v) => v.errorCode === "INVALID_LINE_CONTINUATION" &&
+               v.message && v.message.includes("logical")
+      );
+      expect(logicalErrors).toHaveLength(0);
+    });
+
+    it("should NOT flag variables containing 'and' substring (word boundary prevention)", async () => {
+      // Words like 'band', 'handler', 'random' contain 'and' but are NOT logical operators
+      const validCode = `
+//@version=6
+indicator("Test")
+upperBand = ta.sma(close, 20) + 2 * ta.stdev(close, 20)
+lowerBand = ta.sma(close, 20) - 2 * ta.stdev(close, 20)
+bandWidth = upperBand - lowerBand
+plot(bandWidth)
+      `.trim();
+
+      const result = await parser.validateCode(validCode);
+
+      const logicalErrors = result.violations.filter(
+        (v) => v.errorCode === "INVALID_LINE_CONTINUATION" &&
+               v.message && v.message.includes("logical")
+      );
+      expect(logicalErrors).toHaveLength(0);
+    });
+
+    it("should still flag standalone 'and' at end of line", async () => {
+      const problematicCode = `
+//@version=6
+indicator("Test")
+condition = close > ema20 and
+            volume > avgVolume
+plot(condition ? 1 : 0)
+      `.trim();
+
+      const result = await parser.validateCode(problematicCode);
+
+      expect(result.violations).toContainEqual(
+        expect.objectContaining({
+          errorCode: "INVALID_LINE_CONTINUATION",
+          message: expect.stringContaining("logical"),
+        })
+      );
+    });
+
+    it("should still flag standalone 'or' at end of line", async () => {
+      const problematicCode = `
+//@version=6
+indicator("Test")
+signal = bullishCross or
+         bearishCross
+plot(signal ? 1 : 0)
+      `.trim();
+
+      const result = await parser.validateCode(problematicCode);
+
+      expect(result.violations).toContainEqual(
+        expect.objectContaining({
+          errorCode: "INVALID_LINE_CONTINUATION",
+          message: expect.stringContaining("logical"),
+        })
+      );
+    });
   });
 
   describe("Edge Cases and Complex Scenarios", () => {
@@ -411,12 +485,11 @@ plot(slowEma)
       );
     });
 
-    it("should catch the exact arithmetic operator bug from report", async () => {
-      // The exact problematic pattern from the bug report at lines 459-463
-      const exactBugCode = `
+    it("should NOT flag multi-line arithmetic continuation (valid in Pine Script v6)", async () => {
+      // Multi-line arithmetic with + at end of each line is valid in Pine Script v6
+      const validCode = `
 //@version=6
 indicator("Test")
-// Institutional order flow momentum calculation
 institutionalFlow = (isOrderBlockBullish ? 1.0 : isOrderBlockBearish ? -1.0 : 0.0) +
                     (fvgBullish ? 0.5 : fvgBearish ? -0.5 : 0.0) +
                     (bullishCHoCH ? 0.8 : bearishCHoCH ? -0.8 : 0.0) +
@@ -425,15 +498,13 @@ institutionalFlow = (isOrderBlockBullish ? 1.0 : isOrderBlockBearish ? -1.0 : 0.
 plot(institutionalFlow)
       `.trim();
 
-      const result = await parser.validateCode(exactBugCode);
+      const result = await parser.validateCode(validCode);
 
-      expect(result.violations).toContainEqual(
-        expect.objectContaining({
-          errorCode: "INVALID_LINE_CONTINUATION",
-          severity: "error",
-          message: expect.stringContaining("Pine Script v6 prohibits line continuation after arithmetic operator"),
-        })
+      const arithmeticErrors = result.violations.filter(
+        (v) => v.errorCode === "INVALID_LINE_CONTINUATION" &&
+               v.message && v.message.includes("arithmetic")
       );
+      expect(arithmeticErrors).toHaveLength(0);
     });
 
     it("should validate the fix works correctly", async () => {
